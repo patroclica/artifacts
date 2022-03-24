@@ -1,0 +1,56 @@
+name: Windows.Applications.DefenderHistory
+description:
+reference:
+parameters: 
+  - name: targetglob
+
+sources:
+  - queries:
+      - |
+        Let profile = '''
+          [
+            ["Header", 0, [
+                ["__FileHeader", 0, "String", {"length": 6, "term":""}],
+                ["FileHeader", 0, "Value", {"value":"x=>format(format='%#x', args=x.__FileHeader)"}],
+                ["GUID", 24, "GUIDStruct"],
+                ["MagicVersion", 48, "String", {"length": 38, "encoding":"utf16"}],
+                ["__ThreatTypeLength", 88, "uint8"],
+                ["ThreatType", 96, "String", {"length":"x=> x.__ThreatTypeLength - 2", "encoding":"utf16"}],
+                ["ThreatStatusID", 240, "Enumeration", {
+                    type: "uint8",
+                    map: {
+                         "Unknown": 0,
+                         "Detected": 1,
+                         "Cleaned": 2,
+                         "Quarantined": 3,
+                         "Removed": 4,
+                         "Allowed": 5,
+                         "Blocked": 6,
+                         "Clean Failed": 7,
+                         "Quarantine Failed": 102,
+                         "Remove Failed": 103,
+                         "Allow Failed": 104,
+                         "Abondoned": 105,
+                         "Bloced Failed": 107,
+                     }}],
+                ["Search", 241, "String", {"length": 1000, "term_hex":"0A00000015"}],
+                ["output", 0, "Value", {"value": "x=> x.Search.SizeOf"}],
+                ["FullPathLength", "x=> x.Search.EndOf + 25", "uint8"],
+                ["FullPath", "x=> x.FullPathLength.EndOf + 8", "String", {"length":"x=> x.FullPathLength - 3", "encoding":"utf16"}]
+            ]],
+            ["GUIDStruct", 16, [
+              ["__D1", 0, "uint32"],
+              ["__D2", 4, "uint16"],
+              ["__D3", 6, "uint16"],
+              ["__D4", 8, "String", {"term": "", "length": 2}],
+              ["__D5", 10, "String", {"term": "", "length": 6}],
+              ["DetectionID", 0, "Value", {"value": "x=>format(format='{%x-%x-%x-%x-%x}', args=[x.__D1, x.__D2, x.__D3, x.__D4, x.__D5])"}]
+             ]],
+          ]
+          '''
+    
+            SELECT FullPath, 
+                  parse_binary(filename=FullPath, profile = profile, struct = 'Header') 
+            FROM glob(globs = if(condition=targetglob, then=targetglob, else="C:/ProgramData/Microsoft/Windows Defender/Scans/History/Service/DetectionHistory/**") )
+            WHERE IsDir = False
+        
