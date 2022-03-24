@@ -33,10 +33,10 @@ sources:
                          "Abondoned": 105,
                          "Bloced Failed": 107,
                      }}],
-                ["Search", 241, "String", {"length": 1000, "term_hex":"0A00000015"}],
-                ["output", 0, "Value", {"value": "x=> x.Search.SizeOf"}],
-                ["FullPathLength", "x=> x.Search.EndOf + 25", "uint8"],
-                ["FullPath", "x=> x.FullPathLength.EndOf + 8", "String", {"length":"x=> x.FullPathLength - 3", "encoding":"utf16"}]
+                ["__Search", 241, "String", {"length": 1000, "term_hex":"0A00000015"}],
+                ["__output", 0, "Value", {"value": "x => len(list=x.__Search) + 241"}],
+                ["__FullPathLength", "x=> x.__output + 24", "uint8"],
+                ["FullPath", "x=> x.__output + 32", "String", {"length":"x=> x.__FullPathLength - 2", "encoding":"utf16"}]
             ]],
             ["GUIDStruct", 16, [
               ["__D1", 0, "uint32"],
