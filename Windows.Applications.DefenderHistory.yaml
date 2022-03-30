@@ -10,10 +10,10 @@ sources:
         Let profile = '''
           [
             ["Header", 0, [
-                ["__FileHeader", 0, "String", {"length": 6, "term":""}],
-                ["FileHeader", 0, "Value", {"value":"x=>format(format='%#x', args=x.__FileHeader)"}],
-                ["GUID", 24, "GUIDStruct"],
-                ["MagicVersion", 48, "String", {"length": 38, "encoding":"utf16"}],
+                ["__FileHeaderSearch", 0, "String", {"length": 6, "term":""}],
+                ["__FileHeader", 0, "Value", {"value":"x=>format(format='%#x', args=x.__FileHeaderSearch)"}],
+                ["__GUID", 24, "GUIDStruct"],
+                ["__MagicVersion", 48, "String", {"length": 38, "encoding":"utf16"}],
                 ["__ThreatTypeLength", 88, "uint8"],
                 ["ThreatType", 96, "String", {"length":"x=> x.__ThreatTypeLength - 2", "encoding":"utf16"}],
                 ["ThreatStatusID", 240, "Enumeration", {
