@@ -17,8 +17,7 @@ parameters:
     default: C:/ProgramData/Microsoft/Windows Defender/Scans/History/Service/DetectionHistory/**
 
 sources:
-  - query:
-      - |
+  - query: |
         Let profile = '''
           [
             ["Info", 0, [
@@ -51,7 +50,14 @@ sources:
                 ["__Sha256Search", 300, "String", {"length": 1024, "term_hex":"53006800610032"}],
                 ["Sha256", "x => len(list=x.__Sha256Search) + 322", "String", {"length": 128, "encoding":"utf16"}],
                 ["__TimeSearch", 300, "String", {"length": 1024, "term_hex":"540069006D0065"}],
-                ["Time", "x => len(list=x.__TimeSearch) + 314", "WinFileTime"]
+                ["Time", "x => len(list=x.__TimeSearch) + 314", "WinFileTime"],
+                ["__FileSizeSearch", 300, "String", {"length": 4000, "max_length": 4000, "term_hex":"530069007A0065"}],
+                ["ThreatFileSize", "x => len(list=x.__FileSizeSearch) +  314", "uint32"],
+                ["__UserSearch", "x=> if(condition=Size > 1024, then=(Size - 1024), else=0)", "String", {"length": 1024, "term_hex":"0000080000000A0000"}],
+                ["__Section3Offset", 0, "Value", {"value": "x => if(condition=Size > 1024, then=len(list=x.__UserSearch) + (Size - 1024), else=len(list=x.__UserSearch)) + 114" }],
+                ["User", "x => x.__Section3Offset", "String", {"encoding": "utf16"}],
+                ["__SearchStartingProcess", "x=> x.__Section3Offset + len(list=x.User)", "String", {"length": 1024, "term_hex": "0000150000"}],
+                ["StartingProcess", "x=> x.__Section3Offset + len(list=x.User) + len(list=x.__SearchStartingProcess) + 6", "String", {"encoding": "utf16"}]
             ]],
             ["GUIDStruct", 16, [
               ["__D1", 0, "uint32"],
@@ -64,6 +70,18 @@ sources:
           ]
           '''
     
-            SELECT FullPath, 
-                  parse_binary(filename=FullPath, profile = profile, struct = 'Info') 
+            Let temp = SELECT FullPath, 
+                  Size,    
+                  parse_binary(filename=FullPath, profile = profile, struct = 'Info') as parsedfile 
             FROM glob(globs = TargetGlob)
+            
+            SELECT  parsedfile.Time as EventTime,
+                    parsedfile.ThreatType as ThreatType,
+                    parsedfile.ThreatStatusID as ThreatStatus,
+                    parsedfile.FullPath as FullPath,
+                    parsedfile.Sha256 as Sha256,
+                    parsedfile.ThreatFileSize as FileSizeBytes,
+                    parsedfile.User as User,
+                    parsedfile.StartingProcess as StartingProcess,
+                    FullPath as ParsedFileFullPath
+            FROM temp
