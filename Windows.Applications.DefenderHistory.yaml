@@ -1,15 +1,27 @@
 name: Windows.Applications.DefenderHistory
-description:
+author: "Roman Makuch - @rmakuch Kanstantsin Ilioukevitch - @kostyailiouk"
+description:  |
+    This artifact parses the Windows Defender files generated on threat detection and returns
+    the contained parameters created by Windows Defender about the detected threat. 
+
+    By default with no parameters DefenderHistory parses 
+    "C:/ProgramData/Microsoft/Windows Defender/Scans/History/Service/DetectionHistory/**"
+    A different TargetGlob can be entered.
+
 reference:
+  - https://github.com/jklepsercyber/defender-detectionhistory-parser
+
 parameters: 
-  - name: targetglob
+  - name: TargetGlob
+    description: Glob to target.
+    default: C:/ProgramData/Microsoft/Windows Defender/Scans/History/Service/DetectionHistory/**
 
 sources:
-  - queries:
+  - query:
       - |
         Let profile = '''
           [
-            ["Header", 0, [
+            ["Info", 0, [
                 ["__FileHeaderSearch", 0, "String", {"length": 6, "term":""}],
                 ["__FileHeader", 0, "Value", {"value":"x=>format(format='%#x', args=x.__FileHeaderSearch)"}],
                 ["__GUID", 24, "GUIDStruct"],
@@ -30,8 +42,8 @@ sources:
                          "Quarantine Failed": 102,
                          "Remove Failed": 103,
                          "Allow Failed": 104,
-                         "Abondoned": 105,
-                         "Bloced Failed": 107,
+                         "Abandoned": 105,
+                         "Blocked Failed": 107,
                      }}],
                 ["__Search", 241, "String", {"length": 1024, "term_hex":"0A00000015"}],
                 ["__FullPathLength", "x => len(list=x.__Search) + 265", "uint8"],
@@ -53,7 +65,5 @@ sources:
           '''
     
             SELECT FullPath, 
-                  parse_binary(filename=FullPath, profile = profile, struct = 'Header') 
-            FROM glob(globs = if(condition=targetglob, then=targetglob, else="C:/ProgramData/Microsoft/Windows Defender/Scans/History/Service/DetectionHistory/**") )
-            WHERE IsDir = False
-        
+                  parse_binary(filename=FullPath, profile = profile, struct = 'Info') 
+            FROM glob(globs = TargetGlob)
