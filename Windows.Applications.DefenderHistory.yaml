@@ -17,8 +17,7 @@ parameters:
     default: C:/ProgramData/Microsoft/Windows Defender/Scans/History/Service/DetectionHistory/**
 
 sources:
-  - query:
-      - |
+  - query: |
         Let profile = '''
           [
             ["Info", 0, [
