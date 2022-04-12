@@ -8,6 +8,9 @@ description:  |
     "C:/ProgramData/Microsoft/Windows Defender/Scans/History/Service/DetectionHistory/**"
     A different TargetGlob can be entered.
 
+    Based on the research work done by Jordan Klepser @JordanKlepser
+    https://github.com/jklepsercyber/defender-detectionhistory-parser 
+
 reference:
   - https://github.com/jklepsercyber/defender-detectionhistory-parser
 
